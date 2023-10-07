@@ -56,13 +56,13 @@
     <script>
         function calculateSleepDebt() {
             const sleepHours = {
-                monday: document.getElementById('monday').value,
-                tuesday: document.getElementById('tuesday').value,
-                wednesday: document.getElementById('wednesday').value,
-                thursday: document.getElementById('thursday').value,
-                friday: document.getElementById('friday').value,
-                saturday: document.getElementById('saturday').value,
-                sunday: document.getElementById('sunday').value
+                monday: parseFloat(document.getElementById('monday').value),
+                tuesday: parseFloat(document.getElementById('tuesday').value),
+                wednesday: parseFloat(document.getElementById('wednesday').value),
+                thursday: parseFloat(document.getElementById('thursday').value),
+                friday: parseFloat(document.getElementById('friday').value),
+                saturday: parseFloat(document.getElementById('saturday').value),
+                sunday: parseFloat(document.getElementById('sunday').value)
             };
 
             const totalSleep = Object.values(sleepHours).reduce((acc, curr) => acc + curr, 0);
