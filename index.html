@@ -4,83 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sleep Debt Calculator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #c3d6dd;
-
-        }
-        h1 {
-            color: #333;
-        }
-        #calculator {
-            margin: 20px auto;
-            padding: 20px;
-            border: 1px solid #d0e3e9;
-            box-shadow:  0 0 30px rgb(0, 0, 0, .5);
-            border-radius: 20px;
-            max-width: 400px;
-            background-color: #d0e3e9;
-        }
-    </style>
+    <link href="style.css" rel="stylesheet">
 </head>
 <body>
     <h1>Sleep Debt Calculator</h1>
     <div id="calculator">
         <label for="monday">Monday: </label>
-        <input type="number" id="monday" min="0" max="24">
+        <input type="number" id="monday" min="0" max="24" placeholder="0">
         <br><br>
         <label for="tuesday">Tuesday: </label>
-        <input type="number" id="tuesday" min="0" max="24">
+        <input type="number" id="tuesday" min="0" max="24" placeholder="0">
         <br><br>
         <label for="wednesday">Wednesday: </label>
-        <input type="number" id="wednesday" min="0" max="24">
+        <input type="number" id="wednesday" min="0" max="24" placeholder="0">
         <br><br>
         <label for="thursday">Thursday: </label>
-        <input type="number" id="thursday" min="0" max="24">
+        <input type="number" id="thursday" min="0" max="24" placeholder="0">
         <br><br>
         <label for="friday">Friday: </label>
-        <input type="number" id="friday" min="0" max="24">
+        <input type="number" id="friday" min="0" max="24" placeholder="0">
         <br><br>
         <label for="saturday">Saturday: </label>
-        <input type="number" id="saturday" min="0" max="24">
+        <input type="number" id="saturday" min="0" max="24" placeholder="0">
         <br><br>
         <label for="sunday">Sunday: </label>
-        <input type="number" id="sunday" min="0" max="24">
+        <input type="number" id="sunday" min="0" max="24" placeholder="0">
         <br><br>
-        <button onclick="calculateSleepDebt()">Calculate</button>
+        <button onclick="calculateButton()">Calculate</button>
         <p id="result"></p>
     </div>
 
-    <script>
-        function calculateSleepDebt() {
-            const sleepHours = {
-                monday: parseFloat(document.getElementById('monday').value),
-                tuesday: parseFloat(document.getElementById('tuesday').value),
-                wednesday: parseFloat(document.getElementById('wednesday').value),
-                thursday: parseFloat(document.getElementById('thursday').value),
-                friday: parseFloat(document.getElementById('friday').value),
-                saturday: parseFloat(document.getElementById('saturday').value),
-                sunday: parseFloat(document.getElementById('sunday').value)
-            };
-
-            const totalSleep = Object.values(sleepHours).reduce((acc, curr) => acc + curr, 0);
-            const idealSleepHoursPerWeek = 7 * 8; // 8 hours of sleep per day for 7 days
-            const sleepDebt = idealSleepHoursPerWeek - totalSleep;
-
-            let result = '';
-
-            if (sleepDebt === 0) {
-                result = 'You have no sleep debt. Great job!';
-            } else if (sleepDebt > 0) {
-                result = `You need ${sleepDebt} more hours of sleep this week.`;
-            } else {
-                result = `You've had more sleep than required by ${-sleepDebt} hours this week.`;
-            }
-
-            document.getElementById('result').textContent = result;
-        }
-    </script>
+    <script src="Script.js"></script>
 </body>
 </html>
