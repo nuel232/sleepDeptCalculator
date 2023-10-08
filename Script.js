@@ -1,6 +1,4 @@
 function calculateSleepDebt() {
-    
-    
     const sleepHours = {
         monday:parseFloat(document.getElementById('monday').value),
         tuesday: parseFloat(document.getElementById('tuesday').value),
@@ -34,11 +32,9 @@ function calculateSleepDebt() {
         const totalSleep = Object.values(sleepHours).reduce((acc, curr) => acc + curr, 0);
         const idealSleepHoursPerWeek = 7 * 8; // 8 hours of sleep per day for 7 days
         const sleepDebt = idealSleepHoursPerWeek - totalSleep;
-    
-        // Check if total sleep hours exceed 24
-    
+
         let result = '';
-    
+
         if (sleepDebt === 0) {
             result = 'You have no sleep debt. Great job!';
         } else if (sleepDebt > 0) {
@@ -46,9 +42,9 @@ function calculateSleepDebt() {
         } else {
             result = `You've had more sleep than required by ${-sleepDebt} hours this week.`;
         }
-    
+
         document.getElementById('result').textContent = result;
-        
+
     }
 
 }
