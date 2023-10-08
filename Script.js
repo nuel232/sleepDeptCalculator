@@ -12,7 +12,7 @@ function calculateSleepDebt() {
         document.getElementById('result').textContent = "You have inputed a value of more than 24 hours ";
 
     }else if (sleepHours.monday > 24) {
-        document.getElementById('result').textContent = "You have inputted a value of more than 24 hours ";
+        document.getElementById('result').textContent = "You have inputed a value of more than 24 hours ";
 
     }else if (sleepHours.tuesday > 24) {
         document.getElementById('result').textContent = "You have inputed a value of more than 24 hours ";
