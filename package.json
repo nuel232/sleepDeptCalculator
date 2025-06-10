@@ -1,0 +1,28 @@
+{
+  "name": "sleep-debt-calculator",
+  "version": "1.0.0",
+  "description": "A web application that helps you track, analyze, and improve your sleep patterns",
+  "main": "local-server.js",
+  "scripts": {
+    "start": "node local-server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nuel232/sleepDeptCalculator.git"
+  },
+  "keywords": [
+    "sleep",
+    "calculator",
+    "health",
+    "tracker"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nuel232/sleepDeptCalculator/issues"
+  },
+  "homepage": "https://github.com/nuel232/sleepDeptCalculator#readme",
+  "dependencies": {
+    "dotenv": "^16.3.1"
+  }
+} 

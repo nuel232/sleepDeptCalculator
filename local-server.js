@@ -1,6 +1,22 @@
 // Simple HTTP server for testing the Sleep Debt Calculator locally
 // This helps with redirect URLs and authentication flows
 
+// Try to load environment variables from .env file
+try {
+    const fs = require('fs');
+    const dotenv = require('dotenv');
+    // Check if .env file exists
+    if (fs.existsSync('.env')) {
+        console.log('Loading environment variables from .env file');
+        dotenv.config();
+    } else {
+        console.log('No .env file found. Using default values from supabase-config.js');
+    }
+} catch (err) {
+    console.log('dotenv module not found. Using default values from supabase-config.js');
+    // This allows the app to work even without dotenv installed
+}
+
 const http = require('http');
 const fs = require('fs');
 const path = require('path');

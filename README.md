@@ -27,7 +27,28 @@ The "Sleep Debt Calculator" is a web-based tool designed to help users monitor a
 
 ## Setup Instructions
 
-### 1. Supabase Setup
+### 1. Install Dependencies
+
+If you want to use environment variables for Supabase credentials:
+
+```bash
+npm install
+```
+
+This will install the dotenv package for environment variables.
+
+### 2. Environment Variables
+
+For better security, you can use environment variables to store your Supabase credentials:
+
+1. Create a `.env` file in the root directory
+2. Add the following variables:
+   ```
+   SUPABASE_URL=your_supabase_project_url
+   SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+### 3. Supabase Setup
 
 1. Go to [Supabase.com](https://supabase.com) and sign up for a free account
 2. Create a new project
@@ -36,29 +57,23 @@ The "Sleep Debt Calculator" is a web-based tool designed to help users monitor a
 5. Go to "Authentication" > "URL Configuration" and add the following authorized redirect URLs:
    - `http://localhost:3000/auth.html` (for local development)
    - Your production URL if you have one
-6. Get your API keys from "Project Settings" > "API"
+6. Get your API keys from "Project Settings" > "API" and add them to your `.env` file
 
-### 2. Configure the Application
+### 4. Running Locally
 
-1. Open `supabase-config.js` and update the following:
-   ```javascript
-   const SUPABASE_URL = 'your-supabase-project-url';
-   const SUPABASE_ANON_KEY = 'your-supabase-anon-key';
-   ```
+#### Option 1: Using npm (recommended)
 
-### 3. Running Locally
+```bash
+npm start
+```
 
-#### Option 1: Using the included Node.js server (recommended)
+#### Option 2: Using the included batch file
 
-1. Make sure you have Node.js installed
-2. Open a terminal/command prompt in the project directory
-3. Run the server:
-   ```
-   node local-server.js
-   ```
-4. Open `http://localhost:3000` in your browser
+```bash
+start-server.bat
+```
 
-#### Option 2: Using a web server of your choice
+#### Option 3: Using a web server of your choice
 
 Configure your web server to serve the project files, making sure to handle redirects properly for the authentication flow.
 
@@ -77,7 +92,7 @@ If you're having trouble with email confirmation links:
 
 If you see a 400 error when trying to authenticate:
 
-1. Check that your Supabase API keys are correct in `supabase-config.js`
+1. Check that your Supabase API keys are correct in your `.env` file or `supabase-config.js`
 2. Ensure the email confirmation process is completed before trying to log in
 3. Try clearing your browser cache and cookies
 
