@@ -20,11 +20,11 @@ let isGuestMode = localStorage.getItem('guestMode') === 'true';
 
 // Check authentication status on page load
 document.addEventListener('DOMContentLoaded', async function() {
-    const theme = localStorage.getItem('theme') || 'light';
-    document.body.setAttribute('data-theme', theme);
-    updateThemeIcon();
-    
     try {
+        const theme = localStorage.getItem('theme') || 'light';
+        document.body.setAttribute('data-theme', theme);
+        updateThemeIcon();
+        
         // Get saved sleep history from local storage
         loadSleepHistoryFromLocalStorage();
         renderSleepHistory();
@@ -34,204 +34,253 @@ document.addEventListener('DOMContentLoaded', async function() {
         initializeEventHandlers();
     } catch (err) {
         console.error('Initialization error:', err);
+        // Show a user-friendly error message
+        showErrorMessage('There was an error loading the application. Please refresh the page and try again.');
     }
 });
 
 // Initialize event handlers that don't depend on authentication
 function initializeEventHandlers() {
-    // Star rating functionality
-    qualityStars.forEach(star => {
-        star.addEventListener('mouseover', highlightStars);
-        star.addEventListener('mouseout', resetStars);
-        star.addEventListener('click', setRating);
-    });
-    
-    // Theme toggle
-    themeToggle.addEventListener('click', toggleTheme);
-    
-    // Clear history button
-    clearHistoryBtn.addEventListener('click', clearSleepHistory);
+    try {
+        // Star rating functionality
+        if (qualityStars && qualityStars.length > 0) {
+            qualityStars.forEach(star => {
+                star.addEventListener('mouseover', highlightStars);
+                star.addEventListener('mouseout', resetStars);
+                star.addEventListener('click', setRating);
+            });
+        }
+        
+        // Theme toggle
+        if (themeToggle) {
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+        
+        // Clear history button
+        if (clearHistoryBtn) {
+            clearHistoryBtn.addEventListener('click', clearSleepHistory);
+        }
+        
+        // Calculate button - added event listener programmatically
+        const calculateBtn = document.getElementById('calculate-btn');
+        if (calculateBtn) {
+            // Remove the inline onclick attribute and add a proper event listener
+            calculateBtn.removeAttribute('onclick');
+            calculateBtn.addEventListener('click', calculateSleepDebt);
+        }
+    } catch (err) {
+        console.error('Error initializing event handlers:', err);
+    }
 }
-
-// Event Listeners
-// Note: logoutButton event listener is now handled by supabase-auth.js
-// logoutButton.addEventListener('click', handleLogout);
-// Note: syncDataBtn event listener is now handled by supabase-auth.js
-// syncDataBtn.addEventListener('click', syncSleepData);
 
 // Theme toggling
 function toggleTheme() {
-    const currentTheme = document.body.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    document.body.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    
-    updateThemeIcon();
+    try {
+        const currentTheme = document.body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        document.body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        
+        updateThemeIcon();
+    } catch (err) {
+        console.error('Error toggling theme:', err);
+    }
 }
 
 function updateThemeIcon() {
-    const currentTheme = document.body.getAttribute('data-theme');
-    const icon = themeToggle.querySelector('i');
-    
-    if (currentTheme === 'dark') {
-        icon.classList.remove('fa-moon');
-        icon.classList.add('fa-sun');
-    } else {
-        icon.classList.remove('fa-sun');
-        icon.classList.add('fa-moon');
+    try {
+        if (!themeToggle) return;
+        
+        const currentTheme = document.body.getAttribute('data-theme');
+        const icon = themeToggle.querySelector('i');
+        
+        if (!icon) return;
+        
+        if (currentTheme === 'dark') {
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        } else {
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+        }
+    } catch (err) {
+        console.error('Error updating theme icon:', err);
     }
 }
 
 // Star rating functions
 function highlightStars(e) {
-    const value = parseInt(e.currentTarget.dataset.value);
-    updateStarDisplay(value);
+    try {
+        const value = parseInt(e.currentTarget.dataset.value);
+        updateStarDisplay(value);
+    } catch (err) {
+        console.error('Error highlighting stars:', err);
+    }
 }
 
 function resetStars() {
-    updateStarDisplay(sleepQualityRating);
+    try {
+        updateStarDisplay(sleepQualityRating);
+    } catch (err) {
+        console.error('Error resetting stars:', err);
+    }
 }
 
 function setRating(e) {
-    sleepQualityRating = parseInt(e.currentTarget.dataset.value);
-    updateStarDisplay(sleepQualityRating);
+    try {
+        sleepQualityRating = parseInt(e.currentTarget.dataset.value);
+        updateStarDisplay(sleepQualityRating);
+    } catch (err) {
+        console.error('Error setting star rating:', err);
+    }
 }
 
 function updateStarDisplay(value) {
-    qualityStars.forEach(star => {
-        const starValue = parseInt(star.dataset.value);
-        const icon = star.querySelector('i');
-        
-        if (starValue <= value) {
-            icon.classList.add('active');
-        } else {
-            icon.classList.remove('active');
-        }
-    });
-}
-
-// Authentication functions
-// Now handled by supabase-auth.js
-/*
-async function handleLogout() {
     try {
-        await supabaseClient.auth.signOut();
-        localStorage.removeItem('userLoggedIn');
-        localStorage.removeItem('guestMode');
-        window.location.href = 'auth.html';
+        if (!qualityStars) return;
+        
+        qualityStars.forEach(star => {
+            const starValue = parseInt(star.dataset.value);
+            const icon = star.querySelector('i');
+            
+            if (!icon) return;
+            
+            if (starValue <= value) {
+                icon.classList.add('active');
+            } else {
+                icon.classList.remove('active');
+            }
+        });
     } catch (err) {
-        console.error('Logout error:', err);
-        alert('Error signing out. Please try again.');
+        console.error('Error updating star display:', err);
     }
 }
 
-function updateUIForLoggedInUser(email) {
-    userEmailSpan.textContent = email;
-    syncDataBtn.style.display = 'block';
+// Helper function to show an error message to the user
+function showErrorMessage(message) {
+    try {
+        // Check if there's a result div we can use
+        if (resultDiv) {
+            resultDiv.innerHTML = `
+                <div class="error-message">
+                    <p><strong>Error:</strong> ${message}</p>
+                </div>
+            `;
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            // Fallback to alert
+            alert(message);
+        }
+    } catch (err) {
+        // Last resort
+        alert(message);
+        console.error('Error showing error message:', err);
+    }
 }
-
-function updateUIForGuestMode() {
-    userEmailSpan.textContent = 'Guest Mode';
-    syncDataBtn.style.display = 'none';
-}
-*/
 
 // Main functionality
 function calculateSleepDebt() {
-    // Get values from inputs
-    const mondaySleep = parseFloat(document.getElementById('monday').value) || 0;
-    const tuesdaySleep = parseFloat(document.getElementById('tuesday').value) || 0;
-    const wednesdaySleep = parseFloat(document.getElementById('wednesday').value) || 0;
-    const thursdaySleep = parseFloat(document.getElementById('thursday').value) || 0;
-    const fridaySleep = parseFloat(document.getElementById('friday').value) || 0;
-    const saturdaySleep = parseFloat(document.getElementById('saturday').value) || 0;
-    const sundaySleep = parseFloat(document.getElementById('sunday').value) || 0;
-    const idealSleep = parseFloat(document.getElementById('ideal-sleep').value) || 8;
-    
-    // Calculate total sleep hours
-    const actualSleepHours = mondaySleep + tuesdaySleep + wednesdaySleep + 
-                            thursdaySleep + fridaySleep + saturdaySleep + sundaySleep;
-    
-    // Calculate ideal sleep hours
-    const idealSleepHours = idealSleep * 7;
-    
-    // Calculate sleep debt/surplus
-    const sleepDifference = actualSleepHours - idealSleepHours;
-    
-    // Calculate average daily sleep
-    const averageSleep = (actualSleepHours / 7).toFixed(1);
-    
-    // Generate result message
-    let resultMessage = '';
-    let resultClass = '';
-    
-    if (sleepDifference < -10) {
-        resultMessage = `<strong>Severe Sleep Debt:</strong> You're ${Math.abs(sleepDifference).toFixed(1)} hours short of your ideal sleep. This is a serious sleep deficit that can affect health and cognitive function.`;
-        resultClass = 'severe-debt';
-    } else if (sleepDifference < -5) {
-        resultMessage = `<strong>Moderate Sleep Debt:</strong> You're ${Math.abs(sleepDifference).toFixed(1)} hours short of your ideal sleep. This level of sleep debt can impact mood and performance.`;
-        resultClass = 'moderate-debt';
-    } else if (sleepDifference < 0) {
-        resultMessage = `<strong>Mild Sleep Debt:</strong> You're ${Math.abs(sleepDifference).toFixed(1)} hours short of your ideal sleep. Try to catch up on sleep this weekend.`;
-        resultClass = 'mild-debt';
-    } else if (sleepDifference === 0) {
-        resultMessage = `<strong>Perfect Sleep Balance:</strong> You got exactly your ideal amount of sleep this week!`;
-        resultClass = 'balanced';
-    } else {
-        resultMessage = `<strong>Sleep Surplus:</strong> You got ${sleepDifference.toFixed(1)} hours more than your ideal sleep amount this week.`;
-        resultClass = 'surplus';
-    }
-    
-    // Display result
-    resultDiv.innerHTML = `
-        <div class="result-details ${resultClass}">
-            <div class="result-summary">
-                <div class="result-item">
-                    <span class="result-label">Total Sleep</span>
-                    <span class="result-value">${actualSleepHours.toFixed(1)} hrs</span>
-                </div>
-                <div class="result-item">
-                    <span class="result-label">Ideal Sleep</span>
-                    <span class="result-value">${idealSleepHours.toFixed(1)} hrs</span>
-                </div>
-                <div class="result-item">
-                    <span class="result-label">Average Daily</span>
-                    <span class="result-value">${averageSleep} hrs</span>
-                </div>
-                <div class="result-item">
-                    <span class="result-label">Sleep Debt</span>
-                    <span class="result-value">${sleepDifference.toFixed(1)} hrs</span>
-                </div>
-            </div>
-            <p class="result-message">${resultMessage}</p>
-        </div>
-    `;
-    
-    // Update chart
-    renderSleepChart([mondaySleep, tuesdaySleep, wednesdaySleep, thursdaySleep, fridaySleep, saturdaySleep, sundaySleep], idealSleep);
-    
-    // Generate and display recommendations
-    generateRecommendations(sleepDifference, averageSleep);
-    
-    // Save to history
-    saveSleepData({
-        date: new Date().toISOString(),
-        totalSleep: actualSleepHours,
-        idealSleep: idealSleepHours,
-        sleepDebt: sleepDifference,
-        averageSleep: parseFloat(averageSleep),
-        quality: sleepQualityRating,
-        dailyData: {
-            monday: mondaySleep,
-            tuesday: tuesdaySleep,
-            wednesday: wednesdaySleep,
-            thursday: thursdaySleep,
-            friday: fridaySleep,
-            saturday: saturdaySleep,
-            sunday: sundaySleep
+    try {
+        // Get values from inputs
+        const mondaySleep = parseFloat(document.getElementById('monday')?.value) || 0;
+        const tuesdaySleep = parseFloat(document.getElementById('tuesday')?.value) || 0;
+        const wednesdaySleep = parseFloat(document.getElementById('wednesday')?.value) || 0;
+        const thursdaySleep = parseFloat(document.getElementById('thursday')?.value) || 0;
+        const fridaySleep = parseFloat(document.getElementById('friday')?.value) || 0;
+        const saturdaySleep = parseFloat(document.getElementById('saturday')?.value) || 0;
+        const sundaySleep = parseFloat(document.getElementById('sunday')?.value) || 0;
+        const idealSleep = parseFloat(document.getElementById('ideal-sleep')?.value) || 8;
+        
+        // Calculate total sleep hours
+        const actualSleepHours = mondaySleep + tuesdaySleep + wednesdaySleep + 
+                                thursdaySleep + fridaySleep + saturdaySleep + sundaySleep;
+        
+        // Calculate ideal sleep hours
+        const idealSleepHours = idealSleep * 7;
+        
+        // Calculate sleep debt/surplus
+        const sleepDifference = actualSleepHours - idealSleepHours;
+        
+        // Calculate average daily sleep
+        const averageSleep = (actualSleepHours / 7).toFixed(1);
+        
+        // Generate result message
+        let resultMessage = '';
+        let resultClass = '';
+        
+        if (sleepDifference < -10) {
+            resultMessage = `<strong>Severe Sleep Debt:</strong> You're ${Math.abs(sleepDifference).toFixed(1)} hours short of your ideal sleep. This is a serious sleep deficit that can affect health and cognitive function.`;
+            resultClass = 'severe-debt';
+        } else if (sleepDifference < -5) {
+            resultMessage = `<strong>Moderate Sleep Debt:</strong> You're ${Math.abs(sleepDifference).toFixed(1)} hours short of your ideal sleep. This level of sleep debt can impact mood and performance.`;
+            resultClass = 'moderate-debt';
+        } else if (sleepDifference < 0) {
+            resultMessage = `<strong>Mild Sleep Debt:</strong> You're ${Math.abs(sleepDifference).toFixed(1)} hours short of your ideal sleep. Try to catch up on sleep this weekend.`;
+            resultClass = 'mild-debt';
+        } else if (sleepDifference === 0) {
+            resultMessage = `<strong>Perfect Sleep Balance:</strong> You got exactly your ideal amount of sleep this week!`;
+            resultClass = 'balanced';
+        } else {
+            resultMessage = `<strong>Sleep Surplus:</strong> You got ${sleepDifference.toFixed(1)} hours more than your ideal sleep amount this week.`;
+            resultClass = 'surplus';
         }
-    });
+        
+        // Display result
+        if (resultDiv) {
+            resultDiv.innerHTML = `
+                <div class="result-details ${resultClass}">
+                    <div class="result-summary">
+                        <div class="result-item">
+                            <span class="result-label">Total Sleep</span>
+                            <span class="result-value">${actualSleepHours.toFixed(1)} hrs</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Ideal Sleep</span>
+                            <span class="result-value">${idealSleepHours.toFixed(1)} hrs</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Average Daily</span>
+                            <span class="result-value">${averageSleep} hrs</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Sleep Debt</span>
+                            <span class="result-value">${sleepDifference.toFixed(1)} hrs</span>
+                        </div>
+                    </div>
+                    <p class="result-message">${resultMessage}</p>
+                </div>
+            `;
+        }
+        
+        // Update chart
+        renderSleepChart([mondaySleep, tuesdaySleep, wednesdaySleep, thursdaySleep, fridaySleep, saturdaySleep, sundaySleep], idealSleep);
+        
+        // Generate and display recommendations
+        generateRecommendations(sleepDifference, averageSleep);
+        
+        // Save to history
+        saveSleepData({
+            date: new Date().toISOString(),
+            totalSleep: actualSleepHours,
+            idealSleep: idealSleepHours,
+            sleepDebt: sleepDifference,
+            averageSleep: parseFloat(averageSleep),
+            quality: sleepQualityRating,
+            dailyData: {
+                monday: mondaySleep,
+                tuesday: tuesdaySleep,
+                wednesday: wednesdaySleep,
+                thursday: thursdaySleep,
+                friday: fridaySleep,
+                saturday: saturdaySleep,
+                sunday: sundaySleep
+            }
+        });
+    } catch (err) {
+        console.error('Error calculating sleep debt:', err);
+        showErrorMessage('There was an error calculating your sleep debt. Please try again.');
+    }
 }
 
 // Chart rendering

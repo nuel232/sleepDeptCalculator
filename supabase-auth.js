@@ -1,14 +1,14 @@
 // Initialize Supabase client
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// DOM elements
+// DOM elements - with null checks
 const authModal = document.getElementById('auth-modal');
-const modalTitle = document.getElementById('modal-title');
+const modalTitle = authModal ? document.getElementById('modal-title') : null;
 const authForm = document.getElementById('auth-form');
 const authSubmit = document.getElementById('auth-submit');
 const authError = document.getElementById('auth-error');
-const loginButton = document.getElementById('login-button');
-const signupButton = document.getElementById('signup-button');
+const loginButton = document.getElementById('login-button'); // This may be null
+const signupButton = document.getElementById('signup-button'); // This may be null
 const logoutButton = document.getElementById('logout-button');
 const userEmail = document.getElementById('user-email');
 const closeModalBtn = document.querySelector('.close');
@@ -26,242 +26,311 @@ let currentUser = null;
 
 // Check for existing session on page load
 document.addEventListener('DOMContentLoaded', async function() {
-    // Show welcome overlay
-    showWelcomeOverlay();
-    
-    // Welcome button event listeners
-    welcomeLoginBtn.addEventListener('click', () => {
-        hideWelcomeOverlay();
+    try {
+        // Show welcome overlay if it exists
+        if (welcomeOverlay) {
+            showWelcomeOverlay();
+            
+            // Welcome button event listeners
+            if (welcomeLoginBtn) {
+                welcomeLoginBtn.addEventListener('click', () => {
+                    hideWelcomeOverlay();
+                    isLoginMode = true;
+                    openAuthModal('Sign In');
+                });
+            }
+            
+            if (welcomeSignupBtn) {
+                welcomeSignupBtn.addEventListener('click', () => {
+                    hideWelcomeOverlay();
+                    isLoginMode = false;
+                    openAuthModal('Sign Up');
+                });
+            }
+            
+            if (welcomeGuestBtn) {
+                welcomeGuestBtn.addEventListener('click', () => {
+                    hideWelcomeOverlay();
+                    localStorage.setItem('guestMode', 'true');
+                });
+            }
+        }
+        
+        // Check for existing session
+        const { data, error } = await supabaseClient.auth.getSession();
+        
+        if (error) {
+            console.error('Error checking session:', error.message);
+        } else if (data && data.session) {
+            const { user } = data.session;
+            handleSuccessfulAuth(user);
+            if (welcomeOverlay) hideWelcomeOverlay();
+            loadUserData();
+            animateUIElements();
+        }
+    } catch (err) {
+        console.error('Error initializing auth:', err);
+    }
+});
+
+// Add event listeners only if elements exist
+// Event listeners for loginButton and signupButton
+if (loginButton) {
+    loginButton.addEventListener('click', () => {
         isLoginMode = true;
         openAuthModal('Sign In');
     });
-    
-    welcomeSignupBtn.addEventListener('click', () => {
-        hideWelcomeOverlay();
+}
+
+if (signupButton) {
+    signupButton.addEventListener('click', () => {
         isLoginMode = false;
         openAuthModal('Sign Up');
     });
-    
-    welcomeGuestBtn.addEventListener('click', () => {
-        hideWelcomeOverlay();
+}
+
+// Event listener for logoutButton
+if (logoutButton) {
+    logoutButton.addEventListener('click', handleLogout);
+}
+
+// Event listener for closeModalBtn
+if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', closeAuthModal);
+}
+
+// Event listener for authForm
+if (authForm) {
+    authForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        if (isLoginMode) {
+            await handleLogin(email, password);
+        } else {
+            await handleSignup(email, password);
+        }
     });
-    
-    // Check for existing session
-    const { data, error } = await supabaseClient.auth.getSession();
-    
-    if (data.session) {
-        const { user } = data.session;
-        handleSuccessfulAuth(user);
-        hideWelcomeOverlay();
-        loadUserData();
-        animateUIElements();
-    }
-});
+}
 
-// Event listeners
-loginButton.addEventListener('click', () => {
-    isLoginMode = true;
-    openAuthModal('Sign In');
-});
-
-signupButton.addEventListener('click', () => {
-    isLoginMode = false;
-    openAuthModal('Sign Up');
-});
-
-logoutButton.addEventListener('click', handleLogout);
-
-closeModalBtn.addEventListener('click', closeAuthModal);
-
-authForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    
-    if (isLoginMode) {
-        await handleLogin(email, password);
-    } else {
-        await handleSignup(email, password);
-    }
-});
-
-syncDataBtn.addEventListener('click', async () => {
-    if (!currentUser) {
-        alert('Please sign in to sync your data');
-        return;
-    }
-    
-    await syncDataToSupabase();
-});
+// Event listener for syncDataBtn
+if (syncDataBtn) {
+    syncDataBtn.addEventListener('click', async () => {
+        if (!currentUser) {
+            alert('Please sign in to sync your data');
+            return;
+        }
+        
+        await syncDataToSupabase();
+    });
+}
 
 // Auth functions
 async function handleLogin(email, password) {
     showLoading();
     
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password
-    });
-    
-    hideLoading();
-    
-    if (error) {
-        // Provide more specific error messages for common errors
-        if (error.message.includes('Email not confirmed')) {
-            showError('Please check your email and confirm your account before signing in. Check your spam folder if needed.');
-        } else if (error.message.includes('Invalid login credentials')) {
-            showError('Invalid email or password. Please try again.');
-        } else {
-            showError(error.message);
+    try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email,
+            password
+        });
+        
+        hideLoading();
+        
+        if (error) {
+            // Provide more specific error messages for common errors
+            if (error.message.includes('Email not confirmed')) {
+                showError('Please check your email and confirm your account before signing in. Check your spam folder if needed.');
+            } else if (error.message.includes('Invalid login credentials')) {
+                showError('Invalid email or password. Please try again.');
+            } else {
+                showError(error.message);
+            }
+            return;
         }
-        return;
+        
+        handleSuccessfulAuth(data.user);
+        closeAuthModal();
+        loadUserData();
+        animateUIElements();
+    } catch (err) {
+        hideLoading();
+        showError('An unexpected error occurred. Please try again later.');
+        console.error('Login error:', err);
     }
-    
-    handleSuccessfulAuth(data.user);
-    closeAuthModal();
-    loadUserData();
-    animateUIElements();
 }
 
 async function handleSignup(email, password) {
     showLoading();
     
-    // Get the current domain without port
-    const currentDomain = window.location.protocol + '//' + window.location.hostname;
-    
-    const { data, error } = await supabaseClient.auth.signUp({
-        email,
-        password,
-        options: {
-            emailRedirectTo: currentDomain + '/auth.html'
+    try {
+        // Get the current domain without port
+        const currentDomain = window.location.protocol + '//' + window.location.hostname;
+        
+        const { data, error } = await supabaseClient.auth.signUp({
+            email,
+            password,
+            options: {
+                emailRedirectTo: currentDomain + '/auth.html'
+            }
+        });
+        
+        hideLoading();
+        
+        if (error) {
+            showError(error.message);
+            return;
         }
-    });
-    
-    hideLoading();
-    
-    if (error) {
-        showError(error.message);
-        return;
+        
+        // Always show confirmation message since Supabase is configured to require email verification
+        closeAuthModal();
+        alert(`Account created! Please check your email (${email}) to confirm your account before signing in. Check your spam folder if you don't see the confirmation email.`);
+        
+        // Don't create user profile or set currentUser until they've confirmed their email
+    } catch (err) {
+        hideLoading();
+        showError('An unexpected error occurred during signup. Please try again later.');
+        console.error('Signup error:', err);
     }
-    
-    // Always show confirmation message since Supabase is configured to require email verification
-    closeAuthModal();
-    alert(`Account created! Please check your email (${email}) to confirm your account before signing in. Check your spam folder if you don't see the confirmation email.`);
-    
-    // Don't create user profile or set currentUser until they've confirmed their email
 }
 
 async function handleLogout() {
     showLoading();
     
-    const { error } = await supabaseClient.auth.signOut();
-    
-    hideLoading();
-    
-    if (error) {
-        console.error('Error logging out:', error.message);
-        return;
+    try {
+        const { error } = await supabaseClient.auth.signOut();
+        
+        hideLoading();
+        
+        if (error) {
+            console.error('Error logging out:', error.message);
+            alert('Error signing out: ' + error.message);
+            return;
+        }
+        
+        currentUser = null;
+        if (userEmail) userEmail.textContent = '';
+        if (loginButton) loginButton.style.display = 'inline-block';
+        if (signupButton) signupButton.style.display = 'inline-block';
+        if (logoutButton) logoutButton.style.display = 'none';
+        
+        // Reset local data display but keep the data in localStorage
+        // This way users can still use the app without logging in
+    } catch (err) {
+        hideLoading();
+        console.error('Logout error:', err);
+        alert('An unexpected error occurred during logout. Please try again.');
     }
-    
-    currentUser = null;
-    userEmail.textContent = '';
-    loginButton.style.display = 'inline-block';
-    signupButton.style.display = 'inline-block';
-    logoutButton.style.display = 'none';
-    
-    // Reset local data display but keep the data in localStorage
-    // This way users can still use the app without logging in
 }
 
 // Database functions
 async function createUserProfile(userId) {
-    // Create a profile record for the new user
-    const { error } = await supabaseClient
-        .from('profiles')
-        .insert([
-            { 
-                id: userId,
-                user_id: userId,
-                created_at: new Date()
-            }
-        ]);
-    
-    if (error) {
-        console.error('Error creating user profile:', error.message);
+    try {
+        // Create a profile record for the new user
+        const { error } = await supabaseClient
+            .from('profiles')
+            .insert([
+                { 
+                    id: userId,
+                    user_id: userId,
+                    created_at: new Date()
+                }
+            ]);
+        
+        if (error) {
+            console.error('Error creating user profile:', error.message);
+        }
+    } catch (err) {
+        console.error('Error creating user profile:', err);
     }
 }
 
 async function syncDataToSupabase() {
-    if (!currentUser) return;
-    
-    // Get sleep history from localStorage
-    const sleepHistoryString = localStorage.getItem('sleepHistory');
-    if (!sleepHistoryString) {
-        alert('No sleep data to sync');
+    if (!currentUser) {
+        alert('Please sign in to sync your data');
         return;
     }
     
-    const sleepHistory = JSON.parse(sleepHistoryString);
-    showLoading();
-    
-    // First, delete existing records for this user
-    await supabaseClient
-        .from('sleep_records')
-        .delete()
-        .eq('user_id', currentUser.id);
-    
-    // Insert all sleep records
-    const records = sleepHistory.map(entry => ({
-        user_id: currentUser.id,
-        date: entry.date,
-        total_sleep: entry.totalSleep,
-        sleep_debt: entry.sleepDebt,
-        ideal_sleep_per_day: entry.idealSleepPerDay,
-        sleep_quality: entry.sleepQuality,
-        sleep_hours: entry.sleepHours,
-        created_at: new Date()
-    }));
-    
-    const { error } = await supabaseClient
-        .from('sleep_records')
-        .insert(records);
-    
-    hideLoading();
-    
-    if (error) {
-        console.error('Error syncing data:', error.message);
-        alert('Error syncing data. Please try again.');
-    } else {
-        alert('Data synced successfully!');
+    try {
+        // Get sleep history from localStorage
+        const sleepHistoryString = localStorage.getItem('sleepHistory');
+        if (!sleepHistoryString) {
+            alert('No sleep data to sync');
+            return;
+        }
+        
+        const sleepHistory = JSON.parse(sleepHistoryString);
+        showLoading();
+        
+        // First, delete existing records for this user
+        const { error: deleteError } = await supabaseClient
+            .from('sleep_records')
+            .delete()
+            .eq('user_id', currentUser.id);
+            
+        if (deleteError) {
+            hideLoading();
+            console.error('Error deleting existing records:', deleteError.message);
+            alert('Error syncing data: ' + deleteError.message);
+            return;
+        }
+        
+        // Insert all sleep records
+        const records = sleepHistory.map(entry => ({
+            user_id: currentUser.id,
+            date: entry.date,
+            total_sleep: entry.totalSleep,
+            sleep_debt: entry.sleepDebt,
+            ideal_sleep_per_day: entry.idealSleepPerDay,
+            sleep_quality: entry.sleepQuality,
+            sleep_hours: entry.sleepHours,
+            created_at: new Date()
+        }));
+        
+        const { error } = await supabaseClient
+            .from('sleep_records')
+            .insert(records);
+        
+        hideLoading();
+        
+        if (error) {
+            console.error('Error syncing data:', error.message);
+            alert('Error syncing data: ' + error.message);
+        } else {
+            alert('Data synced successfully!');
+        }
+    } catch (err) {
+        hideLoading();
+        console.error('Error syncing data:', err);
+        alert('An unexpected error occurred while syncing data. Please try again.');
     }
 }
 
 async function loadUserData() {
     if (!currentUser) return;
     
-    showLoading();
-    
-    // Fetch sleep records for this user
-    const { data, error } = await supabaseClient
-        .from('sleep_records')
-        .select()
-        .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: false });
-    
-    hideLoading();
-    
-    if (error) {
-        console.error('Error loading user data:', error.message);
-        return;
-    }
-    
-    if (data && data.length > 0) {
-        // Ask user if they want to load cloud data
-        const loadCloud = confirm('Load your saved data from the cloud?');
-        if (loadCloud) {
-            // Convert the data format from Supabase to match our app's format
-            const formattedData = data.map(record => ({
+    try {
+        showLoading();
+        
+        // Fetch sleep records for this user
+        const { data, error } = await supabaseClient
+            .from('sleep_records')
+            .select()
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false });
+        
+        hideLoading();
+        
+        if (error) {
+            console.error('Error loading user data:', error.message);
+            return;
+        }
+        
+        if (data && data.length > 0) {
+            // Process and display the data
+            const sleepHistoryFromDB = data.map(record => ({
                 date: record.date,
                 totalSleep: record.total_sleep,
                 sleepDebt: record.sleep_debt,
@@ -270,52 +339,66 @@ async function loadUserData() {
                 sleepHours: record.sleep_hours
             }));
             
-            // Update localStorage
-            localStorage.setItem('sleepHistory', JSON.stringify(formattedData));
+            // Merge with local data or replace it
+            const localHistory = localStorage.getItem('sleepHistory') 
+                ? JSON.parse(localStorage.getItem('sleepHistory')) 
+                : [];
+                
+            const mergedHistory = mergeHistoryData(sleepHistoryFromDB, localHistory);
             
-            // Refresh the display
-            sleepHistory = formattedData;
-            displaySleepHistory();
+            // Save to localStorage
+            localStorage.setItem('sleepHistory', JSON.stringify(mergedHistory));
+            
+            // Update UI
+            if (typeof renderSleepHistory === 'function') {
+                renderSleepHistory();
+            }
         }
+    } catch (err) {
+        hideLoading();
+        console.error('Error loading user data:', err);
     }
 }
 
 // UI Helper functions
 function showWelcomeOverlay() {
+    if (!welcomeOverlay) return;
     welcomeOverlay.style.display = 'flex';
-    document.body.style.overflow = 'hidden'; // Prevent scrolling
 }
 
 function hideWelcomeOverlay() {
-    welcomeOverlay.style.opacity = '0';
-    setTimeout(() => {
-        welcomeOverlay.style.display = 'none';
-        document.body.style.overflow = 'auto'; // Re-enable scrolling
-    }, 500);
+    if (!welcomeOverlay) return;
+    welcomeOverlay.style.display = 'none';
 }
 
 function openAuthModal(title) {
+    if (!authModal || !modalTitle) return;
+    
     modalTitle.textContent = title;
-    authSubmit.textContent = title;
-    authError.style.display = 'none';
     authModal.style.display = 'block';
-    document.getElementById('email').value = '';
-    document.getElementById('password').value = '';
+    
+    // Clear previous errors
+    if (authError) authError.textContent = '';
 }
 
 function closeAuthModal() {
+    if (!authModal) return;
     authModal.style.display = 'none';
 }
 
 function handleSuccessfulAuth(user) {
     currentUser = user;
-    userEmail.textContent = user.email;
-    loginButton.style.display = 'none';
-    signupButton.style.display = 'none';
-    logoutButton.style.display = 'inline-block';
+    if (userEmail) userEmail.textContent = user.email;
+    if (loginButton) loginButton.style.display = 'none';
+    if (signupButton) signupButton.style.display = 'none';
+    if (logoutButton) logoutButton.style.display = 'inline-block';
 }
 
 function showError(message) {
+    if (!authError) {
+        console.error(message);
+        return;
+    }
     authError.textContent = message;
     authError.style.display = 'block';
 }
@@ -323,38 +406,49 @@ function showError(message) {
 function showLoading() {
     // You could add a loading spinner here
     document.body.style.cursor = 'wait';
+    
+    // Disable all buttons during loading
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(button => {
+        button.disabled = true;
+    });
 }
 
 function hideLoading() {
+    // Hide loading spinner
     document.body.style.cursor = 'default';
+    
+    // Re-enable all buttons
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(button => {
+        button.disabled = false;
+    });
 }
 
-// Animate UI elements with staggered animation
 function animateUIElements() {
-    const cards = [
-        document.getElementById('calculator'),
-        document.querySelector('.result-container'),
-        document.querySelector('.sleep-chart-container'),
-        document.querySelector('.recommendations'),
-        document.querySelector('.history-container')
-    ];
-    
-    // Reset any existing animations
-    cards.forEach(card => {
-        if (card) {
-            card.style.animation = 'none';
-            card.offsetHeight; // Trigger reflow
-        }
-    });
-    
-    // Apply staggered animations
-    cards.forEach((card, index) => {
-        if (card) {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(20px)';
-            card.style.animation = `slideInUp 0.5s ease-out ${index * 0.1}s forwards`;
-        }
-    });
+    try {
+        // Add animation classes to UI elements for a smoother experience
+        const elements = [
+            document.querySelector('header'),
+            document.getElementById('calculator'),
+            document.querySelector('.result-container'),
+            document.querySelector('.sleep-chart-container'),
+            document.querySelector('.recommendations'),
+            document.querySelector('.history-container')
+        ];
+        
+        elements.forEach((element, index) => {
+            if (!element) return;
+            
+            // Add a slight delay for each element to create a cascade effect
+            setTimeout(() => {
+                element.classList.add('animate-in');
+            }, index * 100);
+        });
+    } catch (err) {
+        console.error('Animation error:', err);
+        // Non-critical error, don't show to user
+    }
 }
 
 // Close modal when clicking outside of it
@@ -362,4 +456,34 @@ window.addEventListener('click', (e) => {
     if (e.target === authModal) {
         closeAuthModal();
     }
-}); 
+});
+
+// Utility function to merge cloud and local data
+function mergeHistoryData(cloudData, localData) {
+    try {
+        if (!localData || localData.length === 0) return cloudData;
+        if (!cloudData || cloudData.length === 0) return localData;
+        
+        // Create a map of existing entries by date
+        const dataMap = new Map();
+        
+        // Add local data first
+        localData.forEach(entry => {
+            dataMap.set(entry.date, entry);
+        });
+        
+        // Add or update with cloud data (cloud takes precedence)
+        cloudData.forEach(entry => {
+            dataMap.set(entry.date, entry);
+        });
+        
+        // Convert map back to array and sort by date (newest first)
+        return Array.from(dataMap.values()).sort((a, b) => {
+            return new Date(b.date) - new Date(a.date);
+        });
+    } catch (err) {
+        console.error('Error merging data:', err);
+        // If there's an error, return local data to be safe
+        return localData;
+    }
+} 
