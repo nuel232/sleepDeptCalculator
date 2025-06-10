@@ -1,16 +1,14 @@
-// Initialize Supabase client
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// DOM Elements
+// DOM Elements - only declaring elements not already declared in supabase-auth.js
 const calculatorForm = document.getElementById('calculator');
 const resultDiv = document.getElementById('result');
 const sleepChartDiv = document.getElementById('sleep-chart');
 const recommendationsDiv = document.getElementById('recommendations-list');
 const historyListDiv = document.getElementById('history-list');
 const clearHistoryBtn = document.getElementById('clear-history');
-const syncDataBtn = document.getElementById('sync-data');
-const logoutButton = document.getElementById('logout-button');
-const userEmailSpan = document.getElementById('user-email');
+// Removing duplicate declarations - these are already defined in supabase-auth.js
+// const syncDataBtn = document.getElementById('sync-data');
+// const logoutButton = document.getElementById('logout-button');
+// const userEmailSpan = document.getElementById('user-email');
 const themeToggle = document.getElementById('theme-toggle');
 const qualityStars = document.querySelectorAll('.star');
 
