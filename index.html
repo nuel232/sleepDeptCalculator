@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sleep Debt Calculator</title>
+    <link href="style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS Client -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+        // This ensures the Supabase object is globally available
+        var supabase = window.supabase;
+        
+        // Redirect to auth page if not logged in (except for guest mode)
+        /*
+        document.addEventListener('DOMContentLoaded', function() {
+            const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+            const isGuestMode = localStorage.getItem('guestMode') === 'true';
+            
+            if (!isLoggedIn && !isGuestMode) {
+                window.location.href = 'auth.html';
+            }
+        });
+        */
+    </script>
+</head>
+<body>
+    <!-- Welcome overlay -->
+    <div id="welcome-overlay" class="overlay">
+        <div class="overlay-content">
+            <h1 class="welcome-title">Sleep Debt Calculator</h1>
+            <p class="welcome-subtitle">Track, analyze, and improve your sleep patterns</p>
+            <div class="welcome-buttons">
+                <button id="welcome-login" class="welcome-btn">Sign In</button>
+                <button id="welcome-signup" class="welcome-btn">Sign Up</button>
+                <button id="welcome-guest" class="welcome-btn welcome-btn-outline">Continue as Guest</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+    <h1>Sleep Debt Calculator</h1>
+            <div class="auth-container">
+                <div id="auth-status">
+                    <button id="logout-button" class="auth-btn">Sign Out</button>
+                    <span id="user-email"></span>
+                </div>
+                <div class="toggle-container">
+                    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Auth Modal -->
+        <div id="auth-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2 id="modal-title">Sign In</h2>
+                <div id="auth-error" class="error-message"></div>
+                <form id="auth-form">
+                    <div class="input-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    <button type="submit" id="auth-submit">Sign In</button>
+                </form>
+            </div>
+        </div>
+
+    <div id="calculator">
+            <h2>Track Your Weekly Sleep</h2>
+            <div class="input-container">
+                <div class="input-group">
+                    <label for="monday">Monday</label>
+                    <input type="number" id="monday" min="0" max="24" step="0.5" placeholder="Hours">
+                </div>
+                <div class="input-group">
+                    <label for="tuesday">Tuesday</label>
+                    <input type="number" id="tuesday" min="0" max="24" step="0.5" placeholder="Hours">
+                </div>
+                <div class="input-group">
+                    <label for="wednesday">Wednesday</label>
+                    <input type="number" id="wednesday" min="0" max="24" step="0.5" placeholder="Hours">
+                </div>
+                <div class="input-group">
+                    <label for="thursday">Thursday</label>
+                    <input type="number" id="thursday" min="0" max="24" step="0.5" placeholder="Hours">
+                </div>
+                <div class="input-group">
+                    <label for="friday">Friday</label>
+                    <input type="number" id="friday" min="0" max="24" step="0.5" placeholder="Hours">
+                </div>
+                <div class="input-group">
+                    <label for="saturday">Saturday</label>
+                    <input type="number" id="saturday" min="0" max="24" step="0.5" placeholder="Hours">
+                </div>
+                <div class="input-group">
+                    <label for="sunday">Sunday</label>
+                    <input type="number" id="sunday" min="0" max="24" step="0.5" placeholder="Hours">
+                </div>
+                <div class="input-group">
+                    <label for="ideal-sleep">Ideal Sleep (per day)</label>
+                    <input type="number" id="ideal-sleep" min="5" max="12" step="0.5" value="8" placeholder="Hours">
+                </div>
+            </div>
+
+            <div class="quality-container">
+                <h3>Sleep Quality</h3>
+                <div class="input-group">
+                    <label for="sleep-quality">How was your overall sleep quality this week?</label>
+                    <div class="quality-rating" id="quality-rating">
+                        <span class="star" data-value="1"><i class="fas fa-star"></i></span>
+                        <span class="star" data-value="2"><i class="fas fa-star"></i></span>
+                        <span class="star" data-value="3"><i class="fas fa-star"></i></span>
+                        <span class="star" data-value="4"><i class="fas fa-star"></i></span>
+                        <span class="star" data-value="5"><i class="fas fa-star"></i></span>
+                    </div>
+                </div>
+            </div>
+
+            <button id="calculate-btn" onclick="calculateSleepDebt()">Calculate Sleep Debt</button>
+        </div>
+
+        <div class="result-container">
+            <h2>Your Sleep Results</h2>
+            <div id="result"></div>
+        </div>
+
+        <div class="sleep-chart-container">
+            <h2>Sleep Pattern Visualization</h2>
+            <div id="sleep-chart" class="sleep-chart"></div>
+        </div>
+
+        <div class="recommendations">
+            <h2>Sleep Recommendations</h2>
+            <div id="recommendations-list"></div>
+        </div>
+
+        <div class="history-container">
+            <h2>Sleep History</h2>
+            <div id="history-list"></div>
+            <div class="history-actions">
+                <button id="clear-history">Clear History</button>
+                <button id="sync-data" class="sync-btn">Sync Data</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="supabase-config.js"></script>
+    <script src="supabase-auth.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

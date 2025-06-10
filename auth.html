@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sleep Debt Calculator - Authentication</title>
+    <link href="style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS Client -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+        // This ensures the Supabase object is globally available
+        var supabase = window.supabase;
+        
+        // Check for error parameters in the URL
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
+            const errorCode = urlParams.get('error_code');
+            const errorDescription = urlParams.get('error_description');
+            
+            if (error && errorCode === 'otp_expired') {
+                // Show error message for expired confirmation link
+                const loginTab = document.getElementById('login-tab');
+                const loginError = document.getElementById('login-error');
+                if (loginTab && loginError) {
+                    loginError.textContent = 'Your confirmation link has expired. Please request a new one or try signing in - we\'ll send a new confirmation email if needed.';
+                    loginError.style.display = 'block';
+                    
+                    // Add a button to request a new confirmation email
+                    const resendButton = document.createElement('button');
+                    resendButton.textContent = 'Resend Confirmation Email';
+                    resendButton.className = 'auth-submit-btn';
+                    resendButton.style.marginTop = '10px';
+                    resendButton.onclick = function() {
+                        const email = prompt('Please enter your email address:');
+                        if (email) {
+                            // Show loading state
+                            resendButton.textContent = 'Sending...';
+                            resendButton.disabled = true;
+                            
+                            // Initialize Supabase client
+                            const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                            
+                            // Request new confirmation email
+                            supabaseClient.auth.resend({
+                                type: 'signup',
+                                email: email,
+                                options: {
+                                    emailRedirectTo: window.location.origin + '/auth.html'
+                                }
+                            })
+                            .then(response => {
+                                alert('If your email exists in our system, a new confirmation link has been sent. Please check your inbox and spam folder.');
+                                resendButton.textContent = 'Resend Confirmation Email';
+                                resendButton.disabled = false;
+                            })
+                            .catch(err => {
+                                alert('Error sending confirmation email. Please try again.');
+                                resendButton.textContent = 'Resend Confirmation Email';
+                                resendButton.disabled = false;
+                            });
+                        }
+                    };
+                    
+                    loginError.appendChild(document.createElement('br'));
+                    loginError.appendChild(resendButton);
+                }
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="auth-page">
+        <div class="auth-container-page">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h1>Sleep Debt Calculator</h1>
+                    <p class="auth-subtitle">Track, analyze, and improve your sleep patterns</p>
+                </div>
+                
+                <div class="auth-tabs">
+                    <button class="auth-tab-btn active" data-tab="login">Sign In</button>
+                    <button class="auth-tab-btn" data-tab="signup">Sign Up</button>
+                </div>
+                
+                <div class="auth-content">
+                    <div id="login-tab" class="auth-tab-content active">
+                        <div id="login-error" class="error-message"></div>
+                        <form id="login-form" class="auth-form">
+                            <div class="input-group">
+                                <label for="login-email">Email</label>
+                                <input type="email" id="login-email" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="login-password">Password</label>
+                                <input type="password" id="login-password" required>
+                            </div>
+                            <button type="submit" id="login-submit" class="auth-submit-btn">Sign In</button>
+                            <div class="auth-links">
+                                <a href="#" id="resend-confirmation" class="auth-link">Resend confirmation email</a>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div id="signup-tab" class="auth-tab-content">
+                        <div id="signup-error" class="error-message"></div>
+                        <form id="signup-form" class="auth-form">
+                            <div class="input-group">
+                                <label for="signup-email">Email</label>
+                                <input type="email" id="signup-email" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="signup-password">Password</label>
+                                <input type="password" id="signup-password" required minlength="6">
+                                <small class="password-hint">Password must be at least 6 characters</small>
+                            </div>
+                            <div class="input-group">
+                                <label for="signup-confirm">Confirm Password</label>
+                                <input type="password" id="signup-confirm" required>
+                            </div>
+                            <button type="submit" id="signup-submit" class="auth-submit-btn">Sign Up</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="auth-options">
+                    <a href="index.html" class="guest-link">Continue as Guest</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="supabase-config.js"></script>
+    <script src="auth-page.js"></script>
+</body>
+</html> 
